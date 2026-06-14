@@ -1,20 +1,31 @@
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import com.google.gson.*;
+
 public class Main {
-    public static void main(String[] args) {
-        String today = "2026-06-13";
+    public static void main(String[] args) throws Exception {
+        String isbn = "9784088825830";
+        String url = "https://api.openbd.jp/v1/get?isbn=" + isbn;
 
-        String[] mangaList = {"ワンピース", "ナルト", "鬼滅の刃"};
-        String[] releaseDates = {"2026-06-13", "2026-07-01", "2026-06-13"};
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .build();
 
-        for (int i = 0; i < mangaList.length; i++) {
-            checkReleaseDate(today, mangaList[i], releaseDates[i]);
-        }
-    }
+        HttpResponse<String> response = client.send(request,
+                HttpResponse.BodyHandlers.ofString());
 
-    static void checkReleaseDate(String today, String manga, String releaseDate) {
-        if (today.equals(releaseDate)) {
-            System.out.println(manga + "は今日が発売日！");
-        } else {
-            System.out.println(manga + "はまだ発売日ではありません");
-        }
+        // JSONを解析
+        JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
+        JsonObject summary = jsonArray.get(0).getAsJsonObject()
+                .getAsJsonObject("summary");
+
+        String title = summary.get("title").getAsString();
+        String pubdate = summary.get("pubdate").getAsString();
+
+        System.out.println("タイトル：" + title);
+        System.out.println("発売日：" + pubdate);
     }
 }
