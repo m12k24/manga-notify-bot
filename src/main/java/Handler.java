@@ -8,12 +8,14 @@ import com.google.gson.*;
 
 public class Handler implements RequestHandler<Object, String> {
 
-    static final String LINE_TOKEN = "GAHPcSab50REDD5PY3BzqXPtIT7+MYzuKuwVAX1dVqmgGA+LlbN47daUAZRbadQ2lpR4/+WDV3n90hqB6OE4+3tyWEUh/3S9vWSpa2EvxTd7ut4yGijls2TfDaA2EyHUrw3QPmZkhUmDqsoWj2rvTgdB04t89/1O/w1cDnyilFU=";
-    static final String USER_ID = "U03f7318bb7a503b64f8c0a895d65b9a5";
+    static final String LINE_TOKEN = System.getenv("LINE_TOKEN");
+    static final String USER_ID = System.getenv("USER_ID");
 
     @Override
     public String handleRequest(Object input, Context context) {
         try {
+            System.out.println("LINE_TOKEN先頭5文字: " + (LINE_TOKEN != null ? LINE_TOKEN.substring(0, 5) : "null"));
+            System.out.println("USER_ID: " + USER_ID);
             String isbn = "9784088825830";
             String url = "https://api.openbd.jp/v1/get?isbn=" + isbn;
 
@@ -42,15 +44,17 @@ public class Handler implements RequestHandler<Object, String> {
     }
 
     static void sendLineMessage(HttpClient client, String message) throws Exception {
-        String body = "{\"to\":\"" + USER_ID + "\",\"messages\":[{\"type\":\"text\",\"text\":\"" + message + "\"}]}";
+    String body = "{\"to\":\"" + USER_ID + "\",\"messages\":[{\"type\":\"text\",\"text\":\"" + message + "\"}]}";
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.line.me/v2/bot/message/push"))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + LINE_TOKEN)
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://api.line.me/v2/bot/message/push"))
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer " + LINE_TOKEN)
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
 
-        client.send(request, HttpResponse.BodyHandlers.ofString());
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    
+    System.out.println("LINE APIレスポンス: " + response.statusCode() + " " + response.body());
     }
 }
