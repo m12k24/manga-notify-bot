@@ -14,9 +14,7 @@ public class Handler implements RequestHandler<Object, String> {
     @Override
     public String handleRequest(Object input, Context context) {
         try {
-            System.out.println("LINE_TOKEN先頭5文字: " + (LINE_TOKEN != null ? LINE_TOKEN.substring(0, 5) : "null"));
-            System.out.println("USER_ID: " + USER_ID);
-            String isbn = "9784088825830";
+            String isbn = "9784041174807";
             String url = "https://api.openbd.jp/v1/get?isbn=" + isbn;
 
             HttpClient client = HttpClient.newHttpClient();
@@ -34,9 +32,17 @@ public class Handler implements RequestHandler<Object, String> {
             String title = summary.get("title").getAsString();
             String pubdate = summary.get("pubdate").getAsString();
 
-            sendLineMessage(client, title + "の発売日は" + pubdate + "です！");
+            // 今日の年月を取得（例：202606）
+            java.time.LocalDate today = java.time.LocalDate.now();
+            String thisMonth = String.format("%04d%02d", today.getYear(), today.getMonthValue());
 
-            return "成功";
+            if (pubdate.startsWith(thisMonth)) {
+                sendLineMessage(client, title + "は今月発売予定です！");
+                return "今月発売：通知しました";
+            } else {
+                return "今月発売ではありません（発売日情報：" + pubdate + "）";
+            }
+
         } catch (Exception e) {
             context.getLogger().log("エラー: " + e.getMessage());
             return "失敗";
